@@ -328,18 +328,78 @@ During this project I gained practical experience with
 ContainerPulse tracks containers deployed through its REST API. Containers started or stopped directly using Docker CLI are not synchronized with the database in the current version.
 ---
 
+# ☸️ Kubernetes Deployment
+
+ContainerPulse can also be deployed on Kubernetes.
+
+### Kubernetes Components
+
+| Resource | Purpose |
+|----------|----------|
+| Namespace | Isolates ContainerPulse resources |
+| ConfigMap | Stores application configuration |
+| Secret | Stores database credentials |
+| StatefulSet | Deploys PostgreSQL with persistent identity |
+| PersistentVolumeClaim | Persists PostgreSQL data |
+| Deployment | Runs the ContainerPulse application |
+| Service | Exposes the application inside/outside the cluster |
+
+### Deploy
+
+```bash
+kubectl apply -f k8s/
+```
+
+Verify deployment
+
+```bash
+kubectl get all -n containerpulse
+```
+
+Access the application
+
+```bash
+minikube service containerpulse -n containerpulse --url
+```
+---
+# 🗼Architecture Diagram kubernetes
+
+                    Browser
+                        │
+                        ▼
+              NodePort Service
+                        │
+                        ▼
+              ContainerPulse Deployment
+                        │
+                        ▼
+             ContainerPulse Pod
+               │              │
+               │              ▼
+               │       Docker Socket
+               │
+               ▼
+          PostgreSQL Service
+               │
+               ▼
+        PostgreSQL StatefulSet
+               │
+               ▼
+      Persistent Volume Claim
+               │
+               ▼
+         Persistent Volume
+
+---
 # 🚧 Future Improvements
 
-- Container restart endpoint
-- Authentication
-- User login
-- Prometheus integration
-- Grafana dashboards
-- Kubernetes support
-- Email alerts
-- Multi-host monitoring
-- Container filtering
-- Search functionality
+- GitHub Actions CI/CD
+- Helm Charts
+- Prometheus Monitoring
+- Grafana Dashboards
+- Horizontal Pod Autoscaler
+- Ingress Controller
+- Kubernetes-native deployment engine
 
 ---
 # 📄 License
