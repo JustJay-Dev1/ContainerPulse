@@ -402,6 +402,3 @@ minikube service containerpulse -n containerpulse --url
 - Kubernetes-native deployment engine
 
 ---
-# 📄 License
-
-MIT License
