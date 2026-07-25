@@ -8,6 +8,9 @@ from services.docker_service import (
     container_stats,
     docker_health
 )
+import time
+from sqlalchemy import create_engine
+from sqlalchemy.exc import OperationalError
 from services.metrics_collector import start_metrics_collector
 from database import db
 from flask import Flask, jsonify, request, render_template
@@ -23,10 +26,45 @@ load_dotenv()
 
 app = Flask(__name__)
 
-app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URL")
+def get_database_url():
+    database_url = os.getenv("DATABASE_URL")
+
+    if database_url:
+        return database_url
+
+    return (
+        f"postgresql://{os.getenv('DATABASE_USER')}:"
+        f"{os.getenv('DATABASE_PASSWORD')}@"
+        f"{os.getenv('DATABASE_HOST')}:"
+        f"{os.getenv('DATABASE_PORT', '5432')}/"
+        f"{os.getenv('DATABASE_NAME')}"
+    )
+
+app.config["SQLALCHEMY_DATABASE_URI"] = get_database_url()
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 db.init_app(app)
+def wait_for_database(max_retries=30):
+
+    database_url = app.config["SQLALCHEMY_DATABASE_URI"]
+
+    print("Waiting for PostgreSQL...")
+
+    for attempt in range(max_retries):
+
+        try:
+            engine = create_engine(database_url)
+            connection = engine.connect()
+            connection.close()
+
+            print("PostgreSQL is ready!")
+            return
+
+        except OperationalError:
+            print(f"Database not ready (attempt {attempt + 1}/{max_retries})")
+            time.sleep(2)
+
+    raise RuntimeError("Could not connect to PostgreSQL.")
 
 """  <!-- ===================== -->
     <!-- FRONTEND API'S -->
@@ -147,12 +185,14 @@ def stop():
 
 if __name__ == "__main__":
 
-    with app.app_context():                                         # creates all the databases specified in models.py
+    wait_for_database()
+
+    with app.app_context():
+
         db.create_all()
 
-    start_metrics_collector(app)                                    # starts the metric_collector thread
+        print("Database tables created.")
 
-    app.run(                                                        # app runs at port 5000
-        host="0.0.0.0",
-        port=5000
-    )
+    start_metrics_collector(app)
+
+    app.run(host="0.0.0.0", port=5000)

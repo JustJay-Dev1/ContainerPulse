@@ -1,0 +1,105 @@
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: containerpulse
+  namespace: containerpulse
+
+spec:
+  replicas: 1
+
+  selector:
+    matchLabels:
+      app: containerpulse
+
+  template:
+
+    metadata:
+      labels:
+        app: containerpulse
+
+    spec:
+
+      containers:
+
+      - name: containerpulse
+
+        image: jayeshjachak/containerpulse:v1
+
+        imagePullPolicy: IfNotPresent
+
+        ports:
+        - containerPort: 5000
+
+        resources:
+          requests:
+            cpu: "250m"
+            memory: "256Mi"
+          limits:
+            cpu: "500m"
+            memory: "512Mi"
+
+        env:
+
+        - name: DATABASE_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: containerpulse-config
+              key: DATABASE_HOST
+
+        - name: DATABASE_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: containerpulse-config
+              key: DATABASE_PORT
+
+        - name: DATABASE_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: containerpulse-config
+              key: DATABASE_NAME
+
+        - name: METRICS_INTERVAL
+          valueFrom:
+            configMapKeyRef:
+              name: containerpulse-config
+              key: METRICS_INTERVAL
+
+        - name: DATABASE_USER
+          valueFrom:
+            secretKeyRef:
+              name: containerpulse-secret
+              key: DATABASE_USER
+
+        - name: DATABASE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: containerpulse-secret
+              key: DATABASE_PASSWORD
+
+        volumeMounts:
+
+        - name: docker-sock
+          mountPath: /var/run/docker.sock
+
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 5000
+
+          initialDelaySeconds: 10
+          periodSeconds: 5
+
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 5000
+
+          initialDelaySeconds: 20
+          periodSeconds: 10
+
+      volumes:
+
+      - name: docker-sock
+        hostPath:
+          path: /var/run/docker.sock

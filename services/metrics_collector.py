@@ -97,7 +97,15 @@ def collect_metrics():                                                  # collec
 
         stats = json.loads(line)
 
-        container = running_map.get(stats["Container"])
+        container = None
+
+        for cid, log in running_map.items():
+
+            if cid.startswith(stats["Container"]):
+
+                container = log
+
+                break
 
         if container is None:
             continue

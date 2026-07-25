@@ -1,23 +1,47 @@
-version: "3.9"                                          # specified schema version           
+version: "3.9"
 
 services:
-    postgres:
-        image: postgres:16                              # specified image and its version
 
-        container_name: monitoring-db                   # gave a container name
+    app:
+        
+        image: jayeshjachak/containerpulse:latest
 
-        restart: always                                 # the container will automatically start up if it crashes
+        container_name: containerpulse-app
 
-        environment:                                    # set environment variables
-            POSTGRES_USER: admin                        # create admin account and password
-            POSTGRES_PASSWORD: admin123
-            POSTGRES_DB: monitoring                     # creates default database
+        restart: unless-stopped
 
         ports:
-            - "5432:5432"                               # maps port from local host machine directly to port inside container respectively  
+        - "5000:5000"
+
+        env_file:
+        - .env
+
+        depends_on:
+        - postgres
 
         volumes:
-            - postgres_data:/var/lib/postgresql/data    # gives path where postgress saves data 
+        # Allow the Flask container to communicate with the host Docker Engine
+        - /var/run/docker.sock:/var/run/docker.sock
 
-volumes:                                                # declares data volume at root level, gurantees that the database records are permanantly saved to host
+    postgres:
+
+        image: postgres:16
+
+        container_name: monitoring-db
+
+        restart: always
+
+        environment:
+            POSTGRES_USER: admin
+            POSTGRES_PASSWORD: admin123
+            POSTGRES_DB: monitoring
+
+        ports:
+            - "5432:5432"
+
+        volumes:
+            - postgres_data:/var/lib/postgresql/data
+
+volumes:
+
     postgres_data:
