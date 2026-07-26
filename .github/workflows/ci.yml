@@ -33,12 +33,16 @@ jobs:
 
       - name: Build Docker Image
         run: |
-          docker build -t containerpulse:latest .
+          docker build \
+            -t containerpulse:latest \
+            -t containerpulse:${{ env.IMAGE_TAG }} .
 
-      - name: Tag Docker image
+      - name: Tag Docker images
         run: |
           docker tag containerpulse:latest ${{ secrets.DOCKERHUB_USERNAME }}/containerpulse:latest
+          docker tag containerpulse:${{ env.IMAGE_TAG }} ${{ secrets.DOCKERHUB_USERNAME }}/containerpulse:${{ env.IMAGE_TAG }}
 
-      - name: Push Docker image
+      - name: Push Docker images
         run: |
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/containerpulse:latest
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/containerpulse:${{ env.IMAGE_TAG }}
