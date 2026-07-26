@@ -34,3 +34,11 @@ jobs:
       - name: Build Docker Image
         run: |
           docker build -t containerpulse:latest .
+
+      - name: Tag Docker image
+        run: |
+          docker tag containerpulse:latest ${{ secrets.DOCKERHUB_USERNAME }}/containerpulse:latest
+
+      - name: Push Docker image
+        run: |
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/containerpulse:latest
